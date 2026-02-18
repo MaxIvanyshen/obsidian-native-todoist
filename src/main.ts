@@ -1,23 +1,18 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { App, Editor, MarkdownView, Modal, Notice, Plugin } from 'obsidian';
+import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
+import { TodoistApi } from "@doist/todoist-api-typescript";
+import { processTodoistCodeBlock } from "./codeblock";
 
 // Remember to rename these classes and interfaces!
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+	todoist: TodoistApi;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+		this.todoist = new TodoistApi(this.settings.apiKey);
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
@@ -33,6 +28,22 @@ export default class MyPlugin extends Plugin {
 			name: 'Replace selected content',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				editor.replaceSelection('Sample editor command');
+			}
+		});
+		// This adds an editor command that can perform some operation on the current editor instance
+		this.addCommand({
+			id: 'todoist-projects',
+			name: 'Get Todoist tasks',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				try {
+					const response = await this.todoist.getTasksByFilter({ query: "(today | overdue)" });
+					const tasks = response.results || response;
+					const checkboxLines = tasks.map((task: { content: string }) => `- [ ] ${task.content}`).join('\n');
+					editor.replaceSelection(checkboxLines);
+					new Notice(`Inserted ${tasks.length} tasks`);
+				} catch (error) {
+					new Notice(`Failed to fetch tasks: ${error}`);
+				}
 			}
 		});
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
@@ -59,10 +70,9 @@ export default class MyPlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
+		// Register the todoist code block processor
+		this.registerMarkdownCodeBlockProcessor("todoist", (source, el, ctx) => {
+			processTodoistCodeBlock(source, el, ctx, this.todoist, this.app);
 		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
@@ -88,12 +98,12 @@ class SampleModal extends Modal {
 	}
 
 	onOpen() {
-		let {contentEl} = this;
+		let { contentEl } = this;
 		contentEl.setText('Woah!');
 	}
 
 	onClose() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
 }

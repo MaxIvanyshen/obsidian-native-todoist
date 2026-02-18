@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "obsidian-native-todoist",
+	"name": "Native Todoist",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
+	"description": "A plugin that integrates Todoist directly into Obsidian using native markdown checkboxes, allowing you to manage your tasks without leaving your notes.",
 	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/MaxIvanyshen",
 	"isDesktopOnly": false
 }

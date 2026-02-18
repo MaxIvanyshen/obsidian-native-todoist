@@ -1,12 +1,12 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import MyPlugin from "./main";
 
 export interface MyPluginSettings {
-	mySetting: string;
+	apiKey: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	apiKey: '',
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -18,18 +18,18 @@ export class SampleSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
+			.setName('API Key')
+			.setDesc('Enter your API key for Todoist. You can find this in your Todoist account settings under "Integrations".')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('Enter your API key')
+				.setValue(this.plugin.settings.apiKey)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.apiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}
